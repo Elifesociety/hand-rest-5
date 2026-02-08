@@ -7,6 +7,8 @@ import { SplashScreen } from '@/components/customer/SplashScreen';
 import { ServiceCard } from '@/components/customer/ServiceCard';
 import { QuickCleanBanner } from '@/components/customer/QuickCleanBanner';
 import { PackageCard } from '@/components/customer/PackageCard';
+import { PropertyDetailsForm, PropertyDetails } from '@/components/customer/PropertyDetailsForm';
+import { AddOnServicesForm } from '@/components/customer/AddOnServicesForm';
 import { BookingForm, BookingFormData } from '@/components/customer/BookingForm';
 import { useServiceCategories, usePackages } from '@/hooks/useServices';
 import { useCreateBooking } from '@/hooks/useBookings';
@@ -14,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/handrest-logo.jpeg';
 import type { ServiceCategory, Package } from '@/types/database';
 
-type Screen = 'splash' | 'home' | 'packages' | 'booking' | 'confirmation';
+type Screen = 'splash' | 'home' | 'packages' | 'property_details' | 'addons' | 'booking' | 'confirmation';
 
 export default function CustomerApp() {
   const [screen, setScreen] = useState<Screen>('splash');
@@ -22,6 +24,9 @@ export default function CustomerApp() {
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [bookingNumber, setBookingNumber] = useState<string>('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [propertyDetails, setPropertyDetails] = useState<PropertyDetails | null>(null);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [addonPrice, setAddonPrice] = useState(0);
   
   const { data: categories, isLoading: categoriesLoading } = useServiceCategories();
   const { data: packages, isLoading: packagesLoading } = usePackages(selectedCategory?.id);
@@ -39,6 +44,34 @@ export default function CustomerApp() {
 
   const handlePackageSelect = (pkg: Package) => {
     setSelectedPackage(pkg);
+    setScreen('property_details');
+  };
+
+  const isBasicPackage = (pkg: Package | null) => 
+    pkg?.name.toUpperCase().includes('BASIC') ?? false;
+
+  const handlePropertySubmit = (details: PropertyDetails) => {
+    setPropertyDetails(details);
+    if (isBasicPackage(selectedPackage)) {
+      // Basic packages skip add-ons
+      setSelectedAddOns([]);
+      setAddonPrice(0);
+      setScreen('booking');
+    } else {
+      setScreen('addons');
+    }
+  };
+
+  const handleUpgradeRequest = () => {
+    // Go back to packages screen to pick a higher tier
+    setSelectedPackage(null);
+    setPropertyDetails(null);
+    setScreen('packages');
+  };
+
+  const handleAddOnsSubmit = (addOns: string[], totalAddonPrice: number) => {
+    setSelectedAddOns(addOns);
+    setAddonPrice(totalAddonPrice);
     setScreen('booking');
   };
 
@@ -77,8 +110,8 @@ export default function CustomerApp() {
         scheduled_time: data.scheduled_time,
         special_instructions: data.special_instructions,
         base_price: selectedPackage.price,
-        addon_price: 0,
-        total_price: selectedPackage.price,
+        addon_price: addonPrice,
+        total_price: selectedPackage.price + addonPrice,
       });
 
       setBookingNumber(booking.booking_number);
@@ -101,12 +134,24 @@ export default function CustomerApp() {
     if (screen === 'packages') {
       setSelectedCategory(null);
       setScreen('home');
-    } else if (screen === 'booking') {
+    } else if (screen === 'property_details') {
       setSelectedPackage(null);
+      setPropertyDetails(null);
       setScreen('packages');
+    } else if (screen === 'addons') {
+      setScreen('property_details');
+    } else if (screen === 'booking') {
+      if (isBasicPackage(selectedPackage)) {
+        setScreen('property_details');
+      } else {
+        setScreen('addons');
+      }
     } else if (screen === 'confirmation') {
       setSelectedCategory(null);
       setSelectedPackage(null);
+      setPropertyDetails(null);
+      setSelectedAddOns([]);
+      setAddonPrice(0);
       setBookingNumber('');
       setScreen('home');
     }
@@ -136,6 +181,8 @@ export default function CustomerApp() {
               <h1 className="text-lg font-semibold text-brand-navy">
                 {screen === 'home' && 'HandRest'}
                 {screen === 'packages' && selectedCategory?.name}
+                {screen === 'property_details' && 'Property Details'}
+                {screen === 'addons' && 'Add-on Services'}
                 {screen === 'booking' && 'Book Service'}
                 {screen === 'confirmation' && 'Booking Confirmed'}
               </h1>
@@ -231,12 +278,30 @@ export default function CustomerApp() {
               </motion.div>
             )}
 
+            {/* Property Details Screen */}
+            {screen === 'property_details' && selectedPackage && (
+              <PropertyDetailsForm
+                pkg={selectedPackage}
+                onSubmit={handlePropertySubmit}
+                onUpgrade={handleUpgradeRequest}
+              />
+            )}
+
+            {/* Add-on Services Screen */}
+            {screen === 'addons' && selectedPackage && (
+              <AddOnServicesForm
+                pkg={selectedPackage}
+                onSubmit={handleAddOnsSubmit}
+              />
+            )}
+
             {/* Booking Form Screen */}
             {screen === 'booking' && selectedPackage && (
               <BookingForm
                 pkg={selectedPackage}
                 onSubmit={handleBookingSubmit}
                 isLoading={createBooking.isPending}
+                addonPrice={addonPrice}
               />
             )}
 

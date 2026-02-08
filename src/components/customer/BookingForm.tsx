@@ -11,6 +11,7 @@ interface BookingFormProps {
   pkg: Package;
   onSubmit: (data: BookingFormData) => void;
   isLoading?: boolean;
+  addonPrice?: number;
 }
 
 export interface BookingFormData {
@@ -28,7 +29,7 @@ export interface BookingFormData {
   special_instructions: string;
 }
 
-export function BookingForm({ pkg, onSubmit, isLoading }: BookingFormProps) {
+export function BookingForm({ pkg, onSubmit, isLoading, addonPrice = 0 }: BookingFormProps) {
   const [formData, setFormData] = useState<BookingFormData>({
     customer_name: '',
     customer_email: '',
@@ -280,10 +281,20 @@ export function BookingForm({ pkg, onSubmit, isLoading }: BookingFormProps) {
 
       {/* Total */}
       <div className="border-t pt-4">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center text-sm text-muted-foreground mb-1">
+          <span>Base Package</span>
+          <span>₹{pkg.price.toLocaleString()}</span>
+        </div>
+        {addonPrice > 0 && (
+          <div className="flex justify-between items-center text-sm text-muted-foreground mb-1">
+            <span>Add-ons</span>
+            <span>₹{addonPrice.toLocaleString()}</span>
+          </div>
+        )}
+        <div className="flex justify-between items-center mb-4 pt-2 border-t">
           <span className="text-lg font-semibold">Total Amount</span>
           <span className="text-2xl font-bold text-brand-teal">
-            ₹{pkg.price.toLocaleString()}
+            ₹{(pkg.price + addonPrice).toLocaleString()}
           </span>
         </div>
         
