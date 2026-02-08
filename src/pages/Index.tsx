@@ -23,8 +23,12 @@ const Hero = () => {
             <a href="#services" className="text-foreground/80 hover:text-brand-teal transition-colors font-medium">Services</a>
             <a href="#why-us" className="text-foreground/80 hover:text-brand-teal transition-colors font-medium">Why Us</a>
             <a href="#contact" className="text-foreground/80 hover:text-brand-teal transition-colors font-medium">Contact</a>
+            <a href="/staff" className="text-foreground/80 hover:text-brand-teal transition-colors font-medium">Staff</a>
+            <a href="/admin" className="text-foreground/80 hover:text-brand-teal transition-colors font-medium">Admin</a>
           </div>
-          <Button variant="hero" size="lg">Get Quote</Button>
+          <Button variant="hero" size="lg" asChild>
+            <a href="/app">Get Quote</a>
+          </Button>
         </motion.nav>
 
         {/* Hero Content */}
@@ -50,11 +54,11 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <Button variant="hero" size="xl">
-                Book a Cleaning
+              <Button variant="hero" size="xl" asChild>
+                <a href="/app">Book a Cleaning</a>
               </Button>
-              <Button variant="heroOutline" size="xl">
-                View Services
+              <Button variant="heroOutline" size="xl" asChild>
+                <a href="#services">View Services</a>
               </Button>
             </div>
             
@@ -272,14 +276,16 @@ const CTA = () => {
             <Button 
               size="xl" 
               className="bg-white text-brand-navy font-semibold hover:bg-white/90 rounded-full shadow-card hover:shadow-elevated hover:scale-105 transition-all duration-300"
+              asChild
             >
-              Get Free Quote
+              <a href="/app">Get Free Quote</a>
             </Button>
             <Button 
               size="xl" 
               className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-brand-navy rounded-full transition-all duration-300"
+              asChild
             >
-              Call Us Now
+              <a href="tel:+919876543210">Call Us Now</a>
             </Button>
           </div>
         </motion.div>
@@ -298,9 +304,10 @@ const Footer = () => {
             © 2024 HandRest Cleaning Solutions. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="text-white/70 hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="text-white/70 hover:text-white transition-colors">Terms</a>
-            <a href="#" className="text-white/70 hover:text-white transition-colors">Contact</a>
+            <a href="/app" className="text-white/70 hover:text-white transition-colors">Book Now</a>
+            <a href="/staff" className="text-white/70 hover:text-white transition-colors">Staff Portal</a>
+            <a href="/admin" className="text-white/70 hover:text-white transition-colors">Admin</a>
+            <a href="#contact" className="text-white/70 hover:text-white transition-colors">Contact</a>
           </div>
         </div>
       </div>
