@@ -122,6 +122,7 @@ export type Database = {
           customer_user_id: string | null
           floor_number: number | null
           id: string
+          landmark: string | null
           package_id: string | null
           panchayath_id: string | null
           pincode: string
@@ -137,7 +138,7 @@ export type Database = {
         }
         Insert: {
           addon_price?: number
-          address_line1: string
+          address_line1?: string
           address_line2?: string | null
           base_price: number
           booking_number: string
@@ -150,9 +151,10 @@ export type Database = {
           customer_user_id?: string | null
           floor_number?: number | null
           id?: string
+          landmark?: string | null
           package_id?: string | null
           panchayath_id?: string | null
-          pincode: string
+          pincode?: string
           property_sqft?: number | null
           report_before?: string | null
           required_staff_count?: number | null
@@ -178,6 +180,7 @@ export type Database = {
           customer_user_id?: string | null
           floor_number?: number | null
           id?: string
+          landmark?: string | null
           package_id?: string | null
           panchayath_id?: string | null
           pincode?: string
@@ -378,9 +381,11 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          panchayath_id: string | null
           phone: string | null
           updated_at: string
           user_id: string
+          ward_number: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -388,9 +393,11 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          panchayath_id?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
+          ward_number?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -398,11 +405,21 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          panchayath_id?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
+          ward_number?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_panchayath_id_fkey"
+            columns: ["panchayath_id"]
+            isOneToOne: false
+            referencedRelation: "panchayaths"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ratings: {
         Row: {

@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, User, Phone, Mail, FileText } from 'lucide-react';
+import { Calendar, Clock, User, Phone, MapPin, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { usePanchayaths } from '@/hooks/usePanchayaths';
 
 interface BookingFormProps {
   totalPrice: number;
@@ -14,13 +17,10 @@ interface BookingFormProps {
 
 export interface BookingFormData {
   customer_name: string;
-  customer_email: string;
   customer_phone: string;
-  address_line1: string;
-  address_line2: string;
-  city: string;
-  pincode: string;
-  floor_number: number;
+  panchayath_id: string;
+  ward_number: number;
+  landmark: string;
   property_sqft: number;
   scheduled_date: string;
   scheduled_time: string;
@@ -28,20 +28,38 @@ export interface BookingFormData {
 }
 
 export function BookingForm({ totalPrice, onSubmit, isLoading }: BookingFormProps) {
+  const { profile } = useAuth();
+  const { data: panchayaths } = usePanchayaths();
+
   const [formData, setFormData] = useState<BookingFormData>({
     customer_name: '',
-    customer_email: '',
     customer_phone: '',
-    address_line1: '',
-    address_line2: '',
-    city: 'Chennai',
-    pincode: '',
-    floor_number: 0,
+    panchayath_id: '',
+    ward_number: 0,
+    landmark: '',
     property_sqft: 0,
     scheduled_date: '',
     scheduled_time: '09:00',
     special_instructions: '',
   });
+
+  // Auto-fill from profile
+  useEffect(() => {
+    if (profile) {
+      setFormData(prev => ({
+        ...prev,
+        customer_name: profile.full_name || prev.customer_name,
+        customer_phone: profile.phone || prev.customer_phone,
+        panchayath_id: (profile as any).panchayath_id || prev.panchayath_id,
+        ward_number: (profile as any).ward_number || prev.ward_number,
+      }));
+    }
+  }, [profile]);
+
+  const selectedPanchayath = panchayaths?.find(p => p.id === formData.panchayath_id);
+  const wardOptions = selectedPanchayath
+    ? Array.from({ length: selectedPanchayath.ward_count }, (_, i) => i + 1)
+    : [];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -67,13 +85,13 @@ export function BookingForm({ totalPrice, onSubmit, isLoading }: BookingFormProp
       onSubmit={handleSubmit}
       className="space-y-6"
     >
-      {/* Customer Details */}
+      {/* Contact Details */}
       <div className="space-y-4">
         <h4 className="font-semibold text-foreground flex items-center gap-2">
           <User className="w-4 h-4" />
           Contact Details
         </h4>
-        
+
         <div className="grid gap-4">
           <div>
             <Label htmlFor="customer_name">Full Name *</Label>
@@ -86,126 +104,98 @@ export function BookingForm({ totalPrice, onSubmit, isLoading }: BookingFormProp
               required
             />
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="customer_email">Email *</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="customer_email"
-                  name="customer_email"
-                  type="email"
-                  value={formData.customer_email}
-                  onChange={handleChange}
-                  className="pl-10"
-                  placeholder="email@example.com"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="customer_phone">Phone *</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="customer_phone"
-                  name="customer_phone"
-                  type="tel"
-                  value={formData.customer_phone}
-                  onChange={handleChange}
-                  className="pl-10"
-                  placeholder="9876543210"
-                  required
-                />
-              </div>
+
+          <div>
+            <Label htmlFor="customer_phone">Phone *</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="customer_phone"
+                name="customer_phone"
+                type="tel"
+                value={formData.customer_phone}
+                onChange={handleChange}
+                className="pl-10"
+                placeholder="9876543210"
+                required
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Address Details */}
+      {/* Location Details */}
       <div className="space-y-4">
         <h4 className="font-semibold text-foreground flex items-center gap-2">
           <MapPin className="w-4 h-4" />
-          Service Address
+          Location Details
         </h4>
-        
+
         <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Panchayath *</Label>
+              <Select
+                value={formData.panchayath_id}
+                onValueChange={(value) =>
+                  setFormData(prev => ({ ...prev, panchayath_id: value, ward_number: 0 }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select panchayath" />
+                </SelectTrigger>
+                <SelectContent>
+                  {panchayaths?.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Ward *</Label>
+              <Select
+                value={formData.ward_number ? String(formData.ward_number) : ''}
+                onValueChange={(value) =>
+                  setFormData(prev => ({ ...prev, ward_number: Number(value) }))
+                }
+                disabled={!formData.panchayath_id}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select ward" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wardOptions.map(w => (
+                    <SelectItem key={w} value={String(w)}>Ward {w}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div>
-            <Label htmlFor="address_line1">Address Line 1 *</Label>
+            <Label htmlFor="landmark">Landmark *</Label>
             <Input
-              id="address_line1"
-              name="address_line1"
-              value={formData.address_line1}
+              id="landmark"
+              name="landmark"
+              value={formData.landmark}
               onChange={handleChange}
-              placeholder="Street address, building name"
+              placeholder="Nearby landmark or location reference"
               required
             />
           </div>
-          
+
           <div>
-            <Label htmlFor="address_line2">Address Line 2</Label>
+            <Label htmlFor="property_sqft">Property Size (sq.ft)</Label>
             <Input
-              id="address_line2"
-              name="address_line2"
-              value={formData.address_line2}
+              id="property_sqft"
+              name="property_sqft"
+              type="number"
+              min="0"
+              value={formData.property_sqft}
               onChange={handleChange}
-              placeholder="Apartment, suite, landmark"
+              placeholder="1000"
             />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="city">City *</Label>
-              <Input
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="pincode">Pincode *</Label>
-              <Input
-                id="pincode"
-                name="pincode"
-                value={formData.pincode}
-                onChange={handleChange}
-                placeholder="600001"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="floor_number">Floor Number</Label>
-              <Input
-                id="floor_number"
-                name="floor_number"
-                type="number"
-                min="0"
-                value={formData.floor_number}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="property_sqft">Property Size (sq.ft)</Label>
-              <Input
-                id="property_sqft"
-                name="property_sqft"
-                type="number"
-                min="0"
-                value={formData.property_sqft}
-                onChange={handleChange}
-                placeholder="1000"
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -216,7 +206,7 @@ export function BookingForm({ totalPrice, onSubmit, isLoading }: BookingFormProp
           <Calendar className="w-4 h-4" />
           Schedule
         </h4>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="scheduled_date">Date *</Label>
@@ -230,7 +220,7 @@ export function BookingForm({ totalPrice, onSubmit, isLoading }: BookingFormProp
               required
             />
           </div>
-          
+
           <div>
             <Label htmlFor="scheduled_time">Time *</Label>
             <div className="relative">
@@ -275,11 +265,11 @@ export function BookingForm({ totalPrice, onSubmit, isLoading }: BookingFormProp
             ₹{totalPrice.toLocaleString()}
           </span>
         </div>
-        
-        <Button 
-          type="submit" 
-          variant="hero" 
-          size="xl" 
+
+        <Button
+          type="submit"
+          variant="hero"
+          size="xl"
           className="w-full"
           disabled={isLoading}
         >

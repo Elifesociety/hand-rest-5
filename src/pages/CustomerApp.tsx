@@ -53,13 +53,9 @@ export default function CustomerApp() {
     try {
       const booking = await createBooking.mutateAsync({
         customer_name: data.customer_name,
-        customer_email: data.customer_email,
         customer_phone: data.customer_phone,
-        address_line1: data.address_line1,
-        address_line2: data.address_line2,
-        city: data.city,
-        pincode: data.pincode,
-        floor_number: data.floor_number,
+        panchayath_id: data.panchayath_id || undefined,
+        landmark: data.landmark,
         property_sqft: data.property_sqft,
         scheduled_date: data.scheduled_date,
         scheduled_time: data.scheduled_time,
