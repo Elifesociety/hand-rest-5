@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar, Clock, MapPin, Phone, Mail, User, Users, AlertCircle, CheckCircle2, DollarSign } from 'lucide-react';
+import { useCustomFeatures } from '@/hooks/useCustomFeatures';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +41,7 @@ export function BookingDetailDialog({ booking, open, onOpenChange }: BookingDeta
   const updateStatus = useUpdateBookingStatus();
   const assignStaff = useAssignStaffToBooking();
   const { data: panchayaths } = usePanchayaths();
+  const { data: customFeatures } = useCustomFeatures();
   const queryClient = useQueryClient();
   
   const [selectedPanchayath, setSelectedPanchayath] = useState<string>('');
@@ -47,9 +49,11 @@ export function BookingDetailDialog({ booking, open, onOpenChange }: BookingDeta
   const [requiredStaffCount, setRequiredStaffCount] = useState(2);
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [lastBookingId, setLastBookingId] = useState<string | null>(null);
-  const [earningPerStaff, setEarningPerStaff] = useState(0);
   const [bonusPerStaff, setBonusPerStaff] = useState(0);
   const [finishing, setFinishing] = useState(false);
+
+  // Auto-calculate fixed earning from custom features
+  const earningPerStaff = customFeatures?.reduce((sum, f) => sum + (f.staff_earning_per_person || 0), 0) ?? 0;
 
   // Reset and pre-fill when booking changes
   if (booking && booking.id !== lastBookingId) {
@@ -58,7 +62,6 @@ export function BookingDetailDialog({ booking, open, onOpenChange }: BookingDeta
     setSelectedStaff([]);
     setReportBefore('');
     setRequiredStaffCount(booking.required_staff_count || 2);
-    setEarningPerStaff(0);
     setBonusPerStaff(0);
     setFinishing(false);
   }
@@ -333,12 +336,11 @@ export function BookingDetailDialog({ booking, open, onOpenChange }: BookingDeta
                 <Label>Fixed Earning Per Staff (₹) *</Label>
                 <Input
                   type="number"
-                  min={0}
                   value={earningPerStaff}
-                  onChange={e => setEarningPerStaff(Number(e.target.value))}
-                  placeholder="Enter amount per staff member"
+                  readOnly
+                  className="bg-muted cursor-not-allowed"
                 />
-                <p className="text-xs text-muted-foreground mt-1">Base earning from custom features staff contribution</p>
+                <p className="text-xs text-muted-foreground mt-1">Auto-calculated from custom features staff earning/person</p>
               </div>
 
               <div>
