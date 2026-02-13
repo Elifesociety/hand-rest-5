@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Calendar, Clock, MapPin, Phone, CheckCircle2, XCircle,
-  LogOut, User, DollarSign, Briefcase, Users
+  LogOut, User, DollarSign, Briefcase, Users, Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,6 +19,7 @@ import { StaffSignupForm } from '@/components/staff/StaffSignupForm';
 import logo from '@/assets/handrest-logo.jpeg';
 
 export default function StaffApp() {
+  const navigate = useNavigate();
   const [authView, setAuthView] = useState<'login' | 'signup'>('login');
   const { user, profile, signIn, signOut, loading: authLoading } = useAuth();
   const { data: myJobs, isLoading: jobsLoading } = useMyJobs(user?.id);
@@ -252,6 +254,16 @@ export default function StaffApp() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Floating Home Button */}
+      <Button
+        variant="hero"
+        size="icon"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-elevated"
+        onClick={() => navigate('/')}
+      >
+        <Home className="w-6 h-6" />
+      </Button>
     </div>
   );
 }
