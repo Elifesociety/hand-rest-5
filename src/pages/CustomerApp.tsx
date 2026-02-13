@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Search } from 'lucide-react';
+import { ArrowLeft, Sparkles, Search, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SplashScreen } from '@/components/customer/SplashScreen';
@@ -10,6 +10,7 @@ import { BuildServiceForm } from '@/components/customer/BuildServiceForm';
 import { BookingForm, BookingFormData } from '@/components/customer/BookingForm';
 import { useServiceCategories } from '@/hooks/useServices';
 import { useCreateBooking } from '@/hooks/useBookings';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/handrest-logo.jpeg';
 import type { ServiceCategory } from '@/types/database';
@@ -27,6 +28,7 @@ export default function CustomerApp() {
 
   const { data: categories, isLoading: categoriesLoading } = useServiceCategories();
   const createBooking = useCreateBooking();
+  const { signOut } = useAuth();
   const { toast } = useToast();
 
   const handleSplashComplete = () => setScreen('home');
@@ -125,7 +127,9 @@ export default function CustomerApp() {
                 {screen === 'confirmation' && 'Booking Confirmed'}
               </h1>
 
-              <div className="w-10" />
+              <Button variant="ghost" size="icon" onClick={() => signOut()} className="text-muted-foreground">
+                <LogOut className="w-5 h-5" />
+              </Button>
             </div>
           </header>
 
